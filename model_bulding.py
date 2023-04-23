@@ -43,9 +43,9 @@ reg = LinearRegression().fit(X_train, y_train)
 np.mean(cross_val_score(reg, X_train, y_train, scoring = 'neg_mean_absolute_error', cv= 3))
 
 # lasso regression 
-lm_l = Lasso(alpha=.13)
-lm_l.fit(X_train,y_train)
-np.mean(cross_val_score(lm_l,X_train,y_train, scoring = 'neg_mean_absolute_error', cv= 3))
+ls = Lasso(alpha=0.01)
+ls.fit(X_train,y_train)
+np.mean(cross_val_score(ls,X_train,y_train, scoring = 'neg_mean_absolute_error', cv= 3))
 
 # tuning the model
 alpha = []
@@ -53,8 +53,8 @@ error = []
 
 for i in range(1,100):
     alpha.append(i/100)
-    lml = Lasso(alpha=(i/100))
-    error.append(np.mean(cross_val_score(lml,X_train,y_train, scoring = 'neg_mean_absolute_error', cv= 3)))
+    ls = Lasso(alpha=(i/100))
+    error.append(np.mean(cross_val_score(ls,X_train,y_train, scoring = 'neg_mean_absolute_error', cv= 3)))
     
 plt.plot(alpha, error)
 
@@ -77,3 +77,30 @@ gs.fit(X_train,y_train)
 
 gs.best_score_
 gs.best_estimator_
+
+# test ensembles 
+tpred_reg = reg.predict(X_test)
+tpred_ls = ls.predict(X_test)
+tpred_rf = gs.best_estimator_.predict(X_test)
+
+from sklearn.metrics import mean_absolute_error
+print(mean_absolute_error(y_test,tpred_reg))
+print(mean_absolute_error(y_test,tpred_ls))
+print(mean_absolute_error(y_test,tpred_rf))
+
+mean_absolute_error(y_test,(tpred_ls+tpred_rf)/2)
+
+import pickle
+pickl = {'model': gs.best_estimator_}
+pickle.dump( pickl, open( 'model_file' + ".p", "wb" ) )
+
+file_name = "model_file.p"
+with open(file_name, 'rb') as pickled:
+    data = pickle.load(pickled)
+    model = data['model']
+
+model.predict(np.array(list(X_test.iloc[1,:])).reshape(1,-1))[0]
+
+print(list(X_test.iloc[1,:]))
+
+
